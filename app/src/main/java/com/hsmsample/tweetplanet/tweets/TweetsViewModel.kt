@@ -1,26 +1,33 @@
 package com.hsmsample.tweetplanet.tweets
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.switchMap
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
+import com.hsmsample.tweetplanet.di.dispatchers.DispatcherProvider
+import com.hsmsample.tweetplanet.tweets.model.MatchingRule
+import com.hsmsample.tweetplanet.tweets.model.TweetData
 import com.hsmsample.tweetplanet.tweets.repository.TweetsRepositoryImpl
+import com.hsmsample.tweetplanet.utils.ERROR_MESSAGE
+import com.hsmsample.tweetplanet.utils.SEARCH_DELAY_MILLIS
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import okhttp3.ResponseBody
 import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 class TweetsViewModel @Inject constructor(
-    private val tweetsRepositoryImpl: TweetsRepositoryImpl
+    private val tweetsRepositoryImpl: TweetsRepositoryImpl,
 ) : ViewModel() {
 
-    private var initCall = false
+    private val _errorHandler = MutableLiveData<String>()
 
-    init {
-        initCall = true
-    }
+    val errorHandler: LiveData<String> get() = _errorHandler
+
+
+    private val _progressDialog = MutableLiveData<Boolean>()
+
+    val progressDialog: LiveData<Boolean> get() = _progressDialog
 
 
     private val _searchChannel = MutableStateFlow("")
@@ -42,85 +49,139 @@ class TweetsViewModel @Inject constructor(
     suspend fun observeSearchChanges() {
 
         searchChannel
-            .debounce { 1000 }
+            .debounce { SEARCH_DELAY_MILLIS }
             .distinctUntilChanged()
             .collectLatest { keyword ->
                 Timber.d("They key has changed $keyword")
-//                fetchFilteredStream(keyword)
+                if (keyword.isNotEmpty())
+                    initializeFilteredStream(keyword)
+                else
+                    retrieveRules(null)
             }
 
     }
 
-    private fun fetchFilteredStream(keyword: String) {
+    private fun initializeFilteredStream(keyword: String) {
 
-        if (initCall) {
-
-            initCall = false
-
-            addRule(keyword)
-
-        } else {
+        viewModelScope.launch {
 
             retrieveRules(keyword)
 
-        }
-    }
+            /*if (initCall) {
 
-    private fun addRule(keyword: String) {
+                initCall = false
 
-        viewModelScope.launch {
-
-            val response = tweetsRepositoryImpl.addRule(keyword)
-
-            if (response.isSuccess) {
-                retrieveRules(keyword)
+                addAndInitializeFetching(keyword)
 
             } else {
-                retrieveRules(keyword)
-            }
+
+
+
+            }*/
 
 
         }
     }
 
-
-    private fun deleteRule(ruleId: String, keyword: String) {
-
+    private fun retrieveRules(keyword: String?) {
         viewModelScope.launch {
 
-            val response = tweetsRepositoryImpl.deleteExistingRules(ruleId)
-
-            if (response.isSuccess) {
-                retrieveRules(keyword)
-            } else {
-                retrieveRules(keyword)
-            }
-
-        }
-
-    }
-
-    fun retrieveRules(keyword: String) {
-        viewModelScope.launch {
+            _progressDialog.value = true
 
             val response = tweetsRepositoryImpl.retrieveRules()
 
-            if (response.isSuccess && response.getOrDefault(emptyList()).isNotEmpty()) {
 
-                val rulesList = response.getOrDefault(emptyList())
+            if (response.isSuccess) {
+                _progressDialog.value = false
 
-                deleteRule(rulesList.firstOrNull()?.id.orEmpty(), keyword)
+                if (response.getOrDefault(emptyList()).isNotEmpty())
+                    deleteAndInitializeFetching(response, keyword)
+                else
+                    if (keyword != null)
+                        addAndInitializeFetching(keyword)
 
             } else {
-
-                fetchFilteredStream(keyword)
-
+                _progressDialog.value = false
+                _errorHandler.value = ERROR_MESSAGE
             }
 
         }
     }
 
+    /*private val _liveTweets = MutableLiveData<ResponseBody>()
 
-    val readRandomString = tweetsRepositoryImpl.getRandomData()
+    val liveTweets: LiveData<ResponseBody> get() = _liveTweets
+
+    fun observeLiveTweets() {
+
+        viewModelScope.launch {
+
+            tweetsRepositoryImpl.getFilteredStream()
+                .collect { value: ResponseBody? ->
+
+                    _liveTweets.value = value
+                }
+
+        }
+
+    }*/
+
+    private suspend fun addAndInitializeFetching(keyword: String) {
+
+        _progressDialog.value = true
+
+        val addRuleResponse = tweetsRepositoryImpl.addRule(keyword)
+
+        when {
+            addRuleResponse.isSuccess -> {
+                _progressDialog.value = false
+                /**
+                 * If we are fetching the filtered stream inside a viewmodel scope
+                 * the cold stream will stop sending data as soon as the viewmodel scope dies,
+                 * in our case it's going to live as long as the fragment (not the fragment view)
+                 * lives, based on the context you initialize your viewmodel in.
+                 */
+
+
+                Timber.d("Fetching the filtered stream inside viewmodel scope")
+            }
+            addRuleResponse.isFailure -> {
+
+                _progressDialog.value = false
+
+                _errorHandler.value = ERROR_MESSAGE
+            }
+        }
+
+    }
+
+    private suspend fun deleteAndInitializeFetching(
+        response: Result<List<MatchingRule>>,
+        keyword: String?
+    ) {
+        _progressDialog.value = true
+
+        val rulesList = response.getOrDefault(emptyList())
+
+        val deleteRules = if (rulesList.firstOrNull() != null)
+            tweetsRepositoryImpl.deleteExistingRules(rulesList.firstOrNull()?.id.orEmpty())
+        else Result.success(null)
+
+        when {
+            deleteRules.isSuccess -> {
+
+                _progressDialog.value = false
+
+                if (keyword != null)
+                    addAndInitializeFetching(keyword)
+            }
+
+            deleteRules.isFailure -> {
+                _progressDialog.value = false
+
+                _errorHandler.value = ERROR_MESSAGE
+            }
+        }
+    }
 
 }

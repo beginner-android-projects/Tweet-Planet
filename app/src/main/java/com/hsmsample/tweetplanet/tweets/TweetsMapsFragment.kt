@@ -14,22 +14,36 @@ import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.gson.Gson
+import com.google.maps.android.data.geojson.GeoJsonLayer
 import com.hsmsample.tweetplanet.R
+import com.hsmsample.tweetplanet.data.remote.Result
 import com.hsmsample.tweetplanet.databinding.FragmentTweetsMapsBinding
+import com.hsmsample.tweetplanet.tweets.model.GeoGsonData
+import com.hsmsample.tweetplanet.tweets.model.TweetData
+import com.hsmsample.tweetplanet.utils.ERROR_MESSAGE
 import com.hsmsample.tweetplanet.utils.showLongToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
+import org.json.JSONObject
+import timber.log.Timber
+import javax.inject.Inject
 
 @FlowPreview
 @AndroidEntryPoint
-class TweetsMapsFragment: Fragment(), OnMapReadyCallback{
+class TweetsMapsFragment : Fragment(), OnMapReadyCallback {
 
     private lateinit var dataBinding: FragmentTweetsMapsBinding
 
     private lateinit var mapView: MapView
 
+    private lateinit var googleMap: GoogleMap
+
     private val viewModel by viewModels<TweetsViewModel>()
+
+    @Inject
+    lateinit var gson: Gson
 
     //region Lifecycle methods
     override fun onCreateView(
@@ -53,6 +67,7 @@ class TweetsMapsFragment: Fragment(), OnMapReadyCallback{
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupVMObservers()
+        setupViewObservers()
         setupEditTextListener()
     }
 
@@ -81,14 +96,12 @@ class TweetsMapsFragment: Fragment(), OnMapReadyCallback{
 
     private fun setupMaps(savedInstanceState: Bundle?) {
         mapView = dataBinding.mapView
-        mapView.onCreate(savedInstanceState) // This is a super important thing to be added! Please mention it in the documentation!
+        mapView.onCreate(savedInstanceState) // This is a super important thing to be added, Suggest mentioning it in the documentation!
         mapView.getMapAsync(this)
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
-        googleMap.addMarker(MarkerOptions().position(LatLng(0.0, 0.0)))
-
-        context?.showLongToast(viewModel.readRandomString)
+        this.googleMap = googleMap
     }
 
     private fun setupEditTextListener() {
@@ -99,8 +112,50 @@ class TweetsMapsFragment: Fragment(), OnMapReadyCallback{
 
     private fun setupVMObservers() {
         lifecycleScope.launch {
+
             viewModel.observeSearchChanges()
+
         }
+    }
+
+    private fun displayMarker(data: TweetData?) {
+        data?.includes?.places?.let { listOfPlaces ->
+
+            if (this::googleMap.isInitialized) {
+
+                if (listOfPlaces.firstOrNull() != null) {
+
+                    val geoGsonData =
+                        gson.toJson(listOfPlaces.firstOrNull()?.geo ?: GeoGsonData())
+
+                    val layer = GeoJsonLayer(googleMap, JSONObject(geoGsonData))
+
+                    layer.addLayerToMap()
+                }
+            }
+
+        }
+    }
+
+    private fun setupViewObservers() {
+        observeProgressDialog()
+
+        observeErrorToast()
+    }
+
+    private fun observeProgressDialog() {
+        // Change this and put it inside the XML (use dataBinding)
+        viewModel.progressDialog.observe(viewLifecycleOwner, { flag ->
+            dataBinding.progressBar.visibility = if (flag) View.VISIBLE else View.GONE
+        })
+    }
+
+    private fun observeErrorToast() {
+        viewModel.errorHandler.observe(viewLifecycleOwner, { message ->
+
+            context?.showLongToast(message ?: getString(R.string.error_message))
+
+        })
     }
 
 

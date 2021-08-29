@@ -1,15 +1,17 @@
 package com.hsmsample.tweetplanet.tweets.repository
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.liveData
 import com.google.gson.JsonObject
 import com.hsmsample.tweetplanet.di.dispatchers.DispatcherProvider
 import com.hsmsample.tweetplanet.tweets.TweetsRemoteDataStore
 import com.hsmsample.tweetplanet.tweets.model.MatchingRule
+import com.hsmsample.tweetplanet.tweets.model.TweetData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import retrofit2.Response
+import okhttp3.ResponseBody
+import timber.log.Timber
 import javax.inject.Inject
 
 class TweetsRepository @Inject constructor(
@@ -17,14 +19,19 @@ class TweetsRepository @Inject constructor(
     private val dispatcherProvider: DispatcherProvider
 ) : TweetsRepositoryImpl {
 
-    override suspend fun getFilteredStream(searchKeyword: String): Flow<JsonObject> = flow {
+    override fun getFilteredStream(): Flow<ResponseBody?> =
+        flow {
+
+            try{
+                val response = tweetsRemoteDataStore.getFilteredStream()
 
 
-        if (searchKeyword.isNotEmpty()) {
+                emit(response.body())
+            } catch (e: Exception) {
+                emit(null)
+            }
 
-        }
-
-    }
+        }.flowOn(dispatcherProvider.io)
 
     override suspend fun addRule(keyword: String): Result<JsonObject> {
         return try {

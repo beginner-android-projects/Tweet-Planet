@@ -6,14 +6,15 @@ import com.hsmsample.tweetplanet.data.remote.ErrorUtils
 import com.hsmsample.tweetplanet.data.remote.Result
 import com.hsmsample.tweetplanet.tweets.model.MatchingRule
 import com.hsmsample.tweetplanet.tweets.model.TweetData
+import com.hsmsample.tweetplanet.tweets.model.request.Add
+import com.hsmsample.tweetplanet.tweets.model.request.AddDeleteRuleRequest
+import com.hsmsample.tweetplanet.tweets.model.request.Delete
 import kotlinx.coroutines.flow.Flow
+import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Response
 import retrofit2.Retrofit
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.Query
+import retrofit2.http.*
 import javax.inject.Inject
 
 private const val TWEETS_ = "tweets/"
@@ -58,45 +59,40 @@ class TweetsRemoteDataStore @Inject constructor(
      */
     suspend fun submitRulesForStream(forAdd: Boolean, payload: String): Response<JsonObject> {
 
-        val map = HashMap<Any?, Any?>()
+        val addDeleteRuleRequest = if (forAdd) {
 
-        if (forAdd) {
-
-            val valueTag = hashMapOf(
-                "value" to payload,
-                "tag" to "keyword"
+            AddDeleteRuleRequest(
+                add = listOf(
+                    Add(
+                       value = payload
+                    )
+                )
             )
-
-            map["add"] = listOf(valueTag)
 
         } else {
 
-            val idsToDelete = hashMapOf(
-                "ids" to listOf(payload)
+            AddDeleteRuleRequest(
+                delete =
+                    Delete(
+                        ids = listOf(payload)
+                    )
             )
-
-            map["delete"] = idsToDelete
         }
 
-        return retrofit.create(Client::class.java).submitRulesForStream(JSONObject(map))
+        return retrofit.create(Client::class.java).submitRulesForStream(addDeleteRuleRequest)
     }
 
     suspend fun retrieveRules(): Response<ApiResponse<List<MatchingRule>>> =
         retrofit.create(Client::class.java).getRulesForStream()
 
 
-    suspend fun getFilteredStream(): Result<TweetData> =
-        getResponse(
-            request = {
-                retrofit.create(Client::class.java).getFilteredStream(
-                    TWEET_FIELDS_VALUES,
-                    EXPANSIONS_VALUES,
-                    PLACE_FIELD_VALUES,
-                    USER_FIELD_VALUES
-                )
-            },
-            "Something went wrong"
-        )
+    suspend fun getFilteredStream(): Response<ResponseBody> =
+        retrofit.create(Client::class.java).getFilteredStream(
+        TWEET_FIELDS_VALUES,
+        EXPANSIONS_VALUES,
+        PLACE_FIELD_VALUES,
+        USER_FIELD_VALUES
+    )
 
 
     private suspend fun <T> getResponse(
@@ -122,17 +118,18 @@ class TweetsRemoteDataStore @Inject constructor(
 private interface Client {
 
     @POST("$TWEETS_$SEARCH_$STREAM_$RULES")
-    suspend fun submitRulesForStream(@Body addRule: JSONObject): Response<JsonObject>
+    suspend fun submitRulesForStream(@Body addRule: AddDeleteRuleRequest): Response<JsonObject>
 
     @GET("$TWEETS_$SEARCH_$STREAM_$RULES")
     suspend fun getRulesForStream(): Response<ApiResponse<List<MatchingRule>>>
 
+    @Streaming
     @GET("$TWEETS_$SEARCH_$STREAM")
     suspend fun getFilteredStream(
         @Query("tweet.fields") tweetFields: String,
         @Query("expansions") expansions: String,
         @Query("place.fields") placeFields: String,
         @Query("user.fields") userFields: String
-    ): Response<TweetData>
+    ): Response<ResponseBody>
 
 }

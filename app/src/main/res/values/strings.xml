@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Tweet Planet</string>
     <string name="enter_search_text">Enter Search Text</string>
+    <string name="error_message">Something went wrong</string>
 </resources>

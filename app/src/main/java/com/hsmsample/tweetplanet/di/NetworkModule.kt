@@ -31,10 +31,6 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideGson(): Gson = GsonBuilder().create()
-
-    @Provides
-    @Singleton
     fun provideHttpInterceptor(): Interceptor {
         return Interceptor { chain: Interceptor.Chain ->
             val originalRequest = chain.request()
@@ -89,7 +85,7 @@ class NetworkModule {
             cache(cache)
 
             interceptor?.let { addInterceptor(it) }
-            loggingInterceptor?.let { addInterceptor(loggingInterceptor) }
+//            loggingInterceptor?.let { addInterceptor(loggingInterceptor) }
 
         }.build()
 
