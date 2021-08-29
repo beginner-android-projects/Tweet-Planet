@@ -1,5 +1,6 @@
 package com.hsmsample.tweetplanet.tweets
 
+import android.graphics.Point
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -30,6 +31,10 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import timber.log.Timber
 import javax.inject.Inject
+import com.google.android.gms.maps.CameraUpdateFactory
+
+
+
 
 @FlowPreview
 @AndroidEntryPoint
@@ -129,27 +134,27 @@ class TweetsMapsFragment : Fragment(), OnMapReadyCallback {
 
                 if (listOfPlaces.firstOrNull() != null) {
 
-                    /*val geoGsonData =
-                        gson.toJson(listOfPlaces.firstOrNull()?.geo ?: GeoGsonData())
+                    Timber.d("Let's see if I am getting the twitter data atleast - ${listOfPlaces.firstOrNull()?.fullName}")
 
-                    val layer = GeoJsonLayer(googleMap, JSONObject(geoGsonData))*/
-
-                    /***
-                     * TweetData(data=Data(authorId=87947798, geo=Geo(placeId=07d9cff2c3c86002), id=1431925295091789825, text=Emirates), includes=Includes(places=[Place(fullName=Lebanese Grill Retaurant, geo=GeoGsonData(bbox=[55.34511026786179, 25.27484105721577, 55.34511026786179, 25.27484105721577], properties=com.hsmsample.tweetplanet.tweets.model.Properties@e16c8d2, type=Feature), id=07d9cff2c3c86002)], users=[User(id=87947798, name=Hussain Mukadam, username=HSM59)]), matchingRules=[MatchingRule(id=1431925243556270080, tag=keyword, value=null)])
-                     */
-
-                    googleMap.addMarker(
-                        MarkerOptions().position(
-                            LatLng(
-                                listOfPlaces.firstOrNull()?.geo?.bbox?.first()?: 0.0,
-                                listOfPlaces.firstOrNull()?.geo?.bbox?.last()?: 0.0
-                            )
-                        )
+                    val latLng = LatLng(
+                        listOfPlaces.firstOrNull()?.geo?.bbox?.last() ?: 0.0,
+                        listOfPlaces.firstOrNull()?.geo?.bbox?.first() ?: 0.0
                     )
+
+
+                    googleMap.addMarker(MarkerOptions().position(latLng))
+
+                    navigateCameraToMarker(latLng)
+
+
                 }
             }
 
         }
+    }
+
+    private fun navigateCameraToMarker(latLng: LatLng) {
+        googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng), 1000, null)
     }
 
     private fun setupViewObservers() {
