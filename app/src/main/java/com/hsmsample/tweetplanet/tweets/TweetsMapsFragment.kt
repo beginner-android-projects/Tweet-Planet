@@ -8,6 +8,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.MapView
@@ -106,7 +107,10 @@ class TweetsMapsFragment : Fragment(), OnMapReadyCallback {
 
     private fun setupEditTextListener() {
         dataBinding.tietSearchField.addTextChangedListener { editable ->
-            viewModel.setSearchQuery(editable.toString())
+            if (editable.toString().isNotEmpty())
+                viewModel.setSearchQuery(editable.toString())
+            else
+                googleMap.clear()
         }
     }
 
@@ -125,12 +129,23 @@ class TweetsMapsFragment : Fragment(), OnMapReadyCallback {
 
                 if (listOfPlaces.firstOrNull() != null) {
 
-                    val geoGsonData =
+                    /*val geoGsonData =
                         gson.toJson(listOfPlaces.firstOrNull()?.geo ?: GeoGsonData())
 
-                    val layer = GeoJsonLayer(googleMap, JSONObject(geoGsonData))
+                    val layer = GeoJsonLayer(googleMap, JSONObject(geoGsonData))*/
 
-                    layer.addLayerToMap()
+                    /***
+                     * TweetData(data=Data(authorId=87947798, geo=Geo(placeId=07d9cff2c3c86002), id=1431925295091789825, text=Emirates), includes=Includes(places=[Place(fullName=Lebanese Grill Retaurant, geo=GeoGsonData(bbox=[55.34511026786179, 25.27484105721577, 55.34511026786179, 25.27484105721577], properties=com.hsmsample.tweetplanet.tweets.model.Properties@e16c8d2, type=Feature), id=07d9cff2c3c86002)], users=[User(id=87947798, name=Hussain Mukadam, username=HSM59)]), matchingRules=[MatchingRule(id=1431925243556270080, tag=keyword, value=null)])
+                     */
+
+                    googleMap.addMarker(
+                        MarkerOptions().position(
+                            LatLng(
+                                listOfPlaces.firstOrNull()?.geo?.bbox?.first()?: 0.0,
+                                listOfPlaces.firstOrNull()?.geo?.bbox?.last()?: 0.0
+                            )
+                        )
+                    )
                 }
             }
 
@@ -141,6 +156,13 @@ class TweetsMapsFragment : Fragment(), OnMapReadyCallback {
         observeProgressDialog()
 
         observeErrorToast()
+
+        viewModel.liveTweets.observe(viewLifecycleOwner, { tweetData ->
+
+            Timber.d("--------------response in view $tweetData")
+
+            tweetData?.let { displayMarker(it) }
+        })
     }
 
     private fun observeProgressDialog() {

@@ -1,6 +1,7 @@
 package com.hsmsample.tweetplanet.tweets
 
 import androidx.lifecycle.*
+import com.google.gson.Gson
 import com.hsmsample.tweetplanet.di.dispatchers.DispatcherProvider
 import com.hsmsample.tweetplanet.tweets.model.MatchingRule
 import com.hsmsample.tweetplanet.tweets.model.TweetData
@@ -18,6 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class TweetsViewModel @Inject constructor(
     private val tweetsRepositoryImpl: TweetsRepositoryImpl,
+    private val gson: Gson
 ) : ViewModel() {
 
     private val _errorHandler = MutableLiveData<String>()
@@ -108,23 +110,14 @@ class TweetsViewModel @Inject constructor(
         }
     }
 
-    /*private val _liveTweets = MutableLiveData<ResponseBody>()
-
-    val liveTweets: LiveData<ResponseBody> get() = _liveTweets
-
-    fun observeLiveTweets() {
-
-        viewModelScope.launch {
-
-            tweetsRepositoryImpl.getFilteredStream()
-                .collect { value: ResponseBody? ->
-
-                    _liveTweets.value = value
-                }
-
+    val liveTweets = tweetsRepositoryImpl.getFilteredStream()
+        .map { jsonString ->
+            gson.fromJson(jsonString, TweetData::class.java)
         }
-
-    }*/
+        .filter { tweetData ->
+            tweetData?.includes?.places?.firstOrNull()?.geo != null
+        }
+        .asLiveData()
 
     private suspend fun addAndInitializeFetching(keyword: String) {
 

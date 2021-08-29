@@ -98,6 +98,14 @@ dependencies {
     def map_util_ver = "2.2.5"
     implementation "com.google.maps.android:android-maps-utils:$map_util_ver"
 
+    // KTX for the Maps SDK for Android library
+    def ktx_maps_ver = "3.1.0"
+    implementation "com.google.maps.android:maps-ktx:$ktx_maps_ver"
+
+    // KTX for the Maps SDK for Android Utility Library
+    implementation "com.google.maps.android:maps-utils-ktx:$ktx_maps_ver"
+
+
 
     // Dependencies for testing
     def mock_server_version = "4.3.1"

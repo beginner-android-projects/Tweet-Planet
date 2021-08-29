@@ -11,7 +11,7 @@ import okhttp3.ResponseBody
  */
 interface TweetsRepositoryImpl {
 
-    fun getFilteredStream(): Flow<ResponseBody?>
+    fun getFilteredStream(): Flow<String?>
 
     suspend fun addRule(keyword: String): Result<JsonObject>
 

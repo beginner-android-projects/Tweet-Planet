@@ -11,22 +11,40 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
+import okio.Buffer
 import timber.log.Timber
+import java.nio.charset.Charset
 import javax.inject.Inject
 
 class TweetsRepository @Inject constructor(
     private val tweetsRemoteDataStore: TweetsRemoteDataStore,
-    private val dispatcherProvider: DispatcherProvider
+    private val dispatcherProvider: DispatcherProvider,
 ) : TweetsRepositoryImpl {
 
-    override fun getFilteredStream(): Flow<ResponseBody?> =
+    override fun getFilteredStream(): Flow<String?> =
         flow {
 
             try{
                 val response = tweetsRemoteDataStore.getFilteredStream()
 
+                Timber.d("----------------response in repo ${response.body()}")
+                Timber.d("----------------response in repo ${response.code()}")
+                Timber.d("----------------response in repo ${response.raw()}")
+                Timber.d("----------------response in repo ${response.errorBody()}")
+                Timber.d("----------------response in repo ${response.message()}")
 
-                emit(response.body())
+                val source = response.body()?.source()
+                val buffer = Buffer()
+
+
+                while(source?.exhausted() != true){
+                    response.body()?.source()?.read(buffer, 8192)
+                    val data = buffer.readString(Charset.defaultCharset())
+
+                    emit(data)
+                }
+
+
             } catch (e: Exception) {
                 emit(null)
             }

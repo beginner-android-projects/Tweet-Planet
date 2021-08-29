@@ -106,13 +106,8 @@ class NetworkModule {
 
     companion object {
         private const val TIMEOUT = 90
-        private const val ACCESS_TOKEN = "access_token"
-        private const val TOKEN_SECRET = "token_secret"
-        private const val BEARER_TOKEN = "bearer_token"
         private const val BEARER = "bearer"
         private const val AUTHORIZATION = "Authorization"
-        private const val CONSUMER_KEY = "consumer_key"
-        private const val CONSUMER_SECRET = "consumer_secret"
     }
 
 }
