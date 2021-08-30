@@ -33,7 +33,7 @@ android {
     productFlavors {
         prod {
             dimension "default"
-            buildConfigField 'String', 'BEARER_TOKEN', '"AAAAAAAAAAAAAAAAAAAAAIyd6gAAAAAAHKEP0Qq6egCNJhsHAIDCFAb%2BUZw%3DlWmoweE5RGmT8WZxx08Q9n7vGTCze3NsfLwC8wge8jD0G82cJq"'
+            buildConfigField 'String', 'BEARER_TOKEN', '""'
             buildConfigField 'String', 'BASE_URL', '"https://api.twitter.com/2/"'
         }
     }
