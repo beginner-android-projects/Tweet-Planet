@@ -83,9 +83,8 @@ class TweetsViewModel @Inject constructor(
     }
 
     val liveTweets = tweetsRepositoryImpl.getFilteredStream()
-        .map {
-            Timber.d("-----------------------> data $it")
-            it
+        .catch {
+            _errorHandler.value = ERROR_MESSAGE
         }
         .filter { tweetData ->
             tweetData?.includes?.places?.firstOrNull()?.geo != null

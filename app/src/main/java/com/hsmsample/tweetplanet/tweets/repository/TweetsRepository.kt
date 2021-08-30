@@ -51,7 +51,6 @@ class TweetsRepository @Inject constructor(
                     }
                 }
 
-
             } catch (e: Exception) {
                 e.printStackTrace()
                 emit(null)
