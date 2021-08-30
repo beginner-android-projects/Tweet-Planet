@@ -1,9 +1,7 @@
 package com.hsmsample.tweetplanet.tweets
 
 import androidx.lifecycle.*
-import com.google.gson.Gson
 import com.hsmsample.tweetplanet.tweets.model.MatchingRule
-import com.hsmsample.tweetplanet.tweets.model.TweetData
 import com.hsmsample.tweetplanet.tweets.repository.TweetsRepositoryImpl
 import com.hsmsample.tweetplanet.utils.ERROR_MESSAGE
 import com.hsmsample.tweetplanet.utils.SEARCH_DELAY_MILLIS
@@ -16,8 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TweetsViewModel @Inject constructor(
-    private val tweetsRepositoryImpl: TweetsRepositoryImpl,
-    private val gson: Gson
+    private val tweetsRepositoryImpl: TweetsRepositoryImpl
 ) : ViewModel() {
 
     private val _errorHandler = MutableLiveData<String>()
@@ -86,6 +83,10 @@ class TweetsViewModel @Inject constructor(
     }
 
     val liveTweets = tweetsRepositoryImpl.getFilteredStream()
+        .map {
+            Timber.d("-----------------------> data $it")
+            it
+        }
         .filter { tweetData ->
             tweetData?.includes?.places?.firstOrNull()?.geo != null
         }
@@ -106,9 +107,6 @@ class TweetsViewModel @Inject constructor(
                  * in our case it's going to live as long as the fragment (not the fragment view)
                  * lives, based on the context you initialize your viewmodel in.
                  */
-
-
-                Timber.d("Fetching the filtered stream inside viewmodel scope")
             }
             addRuleResponse.isFailure -> {
 

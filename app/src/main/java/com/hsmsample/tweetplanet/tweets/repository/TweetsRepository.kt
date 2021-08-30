@@ -10,13 +10,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
-import okhttp3.ResponseBody
 import okio.Buffer
-import retrofit2.Response
 import java.nio.charset.Charset
 import javax.inject.Inject
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 class TweetsRepository @Inject constructor(
     private val tweetsRemoteDataStore: TweetsRemoteDataStore,
@@ -27,15 +23,17 @@ class TweetsRepository @Inject constructor(
     override fun getFilteredStream(): Flow<TweetData?> =
         flow {
 
-            try {
-                val response = tweetsRemoteDataStore.getFilteredStream()
+            val response = tweetsRemoteDataStore.getFilteredStream()
 
-                val source = response.body()?.source()
+            val body = response.body()
+            try {
+
+                val source = body?.source()
                 val buffer = Buffer()
 
 
                 while (source?.exhausted() != true) {
-                    response.body()?.source()?.read(buffer, 8192)
+                    source?.read(buffer, 8192)
                     val data = buffer.readString(Charset.defaultCharset())
 
                     if (data.contains("\n")) {
@@ -43,12 +41,12 @@ class TweetsRepository @Inject constructor(
                         val dataArray = data.split("\n")
 
                         for (dataItem in dataArray) {
-                            val convertedItem = gson.fromJson(dataItem, TweetData::class.java)
+                            val convertedItem = getTweetDataFromString(dataItem)
                             emit(convertedItem)
                         }
 
                     } else {
-                        val convertedItem = gson.fromJson(data, TweetData::class.java)
+                        val convertedItem = getTweetDataFromString(data)
                         emit(convertedItem)
                     }
                 }
@@ -57,9 +55,23 @@ class TweetsRepository @Inject constructor(
             } catch (e: Exception) {
                 e.printStackTrace()
                 emit(null)
+            } finally {
+                getFilteredStream()
+                emit(null)
+                body?.close()
             }
 
         }.flowOn(dispatcherProvider.io)
+
+
+    private fun getTweetDataFromString(jsonString: String): TweetData? =
+        try {
+            gson.fromJson(jsonString, TweetData::class.java)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+
 
     override suspend fun addRule(keyword: String): Result<JsonObject> {
         return try {
