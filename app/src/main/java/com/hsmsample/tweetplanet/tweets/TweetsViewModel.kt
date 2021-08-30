@@ -86,17 +86,6 @@ class TweetsViewModel @Inject constructor(
     }
 
     val liveTweets = tweetsRepositoryImpl.getFilteredStream()
-        .map { jsonString ->
-            try {
-                Timber.d("------- What does this string look like - $jsonString")
-                if (!jsonString.isNullOrBlank()) {
-                    gson.fromJson(jsonString, TweetData::class.java)
-                } else TweetData()
-            } catch (e: Exception) {
-                e.printStackTrace()
-                TweetData()
-            }
-        }
         .filter { tweetData ->
             tweetData?.includes?.places?.firstOrNull()?.geo != null
         }

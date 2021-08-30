@@ -1,23 +1,30 @@
 package com.hsmsample.tweetplanet.tweets.repository
 
+import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.hsmsample.tweetplanet.di.dispatchers.DispatcherProvider
 import com.hsmsample.tweetplanet.tweets.TweetsRemoteDataStore
 import com.hsmsample.tweetplanet.tweets.model.MatchingRule
+import com.hsmsample.tweetplanet.tweets.model.TweetData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import okhttp3.ResponseBody
 import okio.Buffer
+import retrofit2.Response
 import java.nio.charset.Charset
 import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 class TweetsRepository @Inject constructor(
     private val tweetsRemoteDataStore: TweetsRemoteDataStore,
     private val dispatcherProvider: DispatcherProvider,
+    private val gson: Gson
 ) : TweetsRepositoryImpl {
 
-    override fun getFilteredStream(): Flow<String?> =
+    override fun getFilteredStream(): Flow<TweetData?> =
         flow {
 
             try {
@@ -36,11 +43,14 @@ class TweetsRepository @Inject constructor(
                         val dataArray = data.split("\n")
 
                         for (dataItem in dataArray) {
-                            emit(dataItem)
+                            val convertedItem = gson.fromJson(dataItem, TweetData::class.java)
+                            emit(convertedItem)
                         }
 
-                    } else
-                        emit(data)
+                    } else {
+                        val convertedItem = gson.fromJson(data, TweetData::class.java)
+                        emit(convertedItem)
+                    }
                 }
 
 

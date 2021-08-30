@@ -1,5 +1,6 @@
 package com.hsmsample.tweetplanet.di
 
+import com.google.gson.Gson
 import com.hsmsample.tweetplanet.di.dispatchers.DispatcherProvider
 import com.hsmsample.tweetplanet.tweets.TweetsRemoteDataStore
 import com.hsmsample.tweetplanet.tweets.repository.TweetsRepository
@@ -24,8 +25,9 @@ object TweetStreamModule {
     @ViewModelScoped
     fun provideTweetsRepository(
         tweetsRemoteDataStore: TweetsRemoteDataStore,
-        dispatchers: DispatcherProvider
+        dispatchers: DispatcherProvider,
+        gson: Gson
     ): TweetsRepositoryImpl =
-        TweetsRepository(tweetsRemoteDataStore, dispatchers) as TweetsRepositoryImpl
+        TweetsRepository(tweetsRemoteDataStore, dispatchers, gson) as TweetsRepositoryImpl
 
 }

@@ -27,12 +27,5 @@ class TweetsViewModelTest {
 
     }
 
-    @Test
-    fun `test random strings are equal`() {
 
-        val randomString = tweetsViewModel.readRandomString
-
-        assertEquals(randomString, "ahsdjkfasldkjfhasdjlkf lkjdfshjklasdf")
-
-    }
 }

@@ -11,11 +11,9 @@ import kotlinx.coroutines.flow.flow
 class FakeTweetsRepository(
     private val dispatcherProvider: DispatcherProvider
 ): TweetsRepositoryImpl {
+    override fun getFilteredStream(): Flow<String?> {
 
-    override suspend fun getFilteredStream(searchKeyword: String): Flow<com.hsmsample.tweetplanet.data.remote.Result<TweetData>> =
-        flow {
-
-        }
+    }
 
     override suspend fun addRule(keyword: String): Result<JsonObject> {
 
@@ -26,8 +24,7 @@ class FakeTweetsRepository(
     }
 
     override suspend fun retrieveRules(): Result<List<MatchingRule>> {
-        return Result.success(emptyList())
+
     }
 
-    override fun getRandomData(): String = "ahsdjkfasldkjfhasdjlkf lkjdfshjklasdf"
 }
