@@ -20,5 +20,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideGson(): Gson = GsonBuilder().create()
+    fun provideGson(): Gson = GsonBuilder()
+        .setLenient()
+        .create()
 }

@@ -1,6 +1,5 @@
 package com.hsmsample.tweetplanet.tweets
 
-import android.graphics.Point
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,7 +8,6 @@ import androidx.core.widget.addTextChangedListener
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.MapView
@@ -17,24 +15,16 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.gson.Gson
-import com.google.maps.android.data.geojson.GeoJsonLayer
 import com.hsmsample.tweetplanet.R
-import com.hsmsample.tweetplanet.data.remote.Result
 import com.hsmsample.tweetplanet.databinding.FragmentTweetsMapsBinding
-import com.hsmsample.tweetplanet.tweets.model.GeoGsonData
 import com.hsmsample.tweetplanet.tweets.model.TweetData
-import com.hsmsample.tweetplanet.utils.ERROR_MESSAGE
 import com.hsmsample.tweetplanet.utils.showLongToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 import timber.log.Timber
 import javax.inject.Inject
 import com.google.android.gms.maps.CameraUpdateFactory
-
-
-
 
 @FlowPreview
 @AndroidEntryPoint
@@ -112,60 +102,28 @@ class TweetsMapsFragment : Fragment(), OnMapReadyCallback {
 
     private fun setupEditTextListener() {
         dataBinding.tietSearchField.addTextChangedListener { editable ->
-            if (editable.toString().isNotEmpty())
-                viewModel.setSearchQuery(editable.toString())
-            else
+            viewModel.setSearchQuery(editable.toString())
+
+            if (editable.toString().isBlank())
                 googleMap.clear()
         }
     }
 
     private fun setupVMObservers() {
         lifecycleScope.launch {
-
             viewModel.observeSearchChanges()
-
         }
     }
 
-    private fun displayMarker(data: TweetData?) {
-        data?.includes?.places?.let { listOfPlaces ->
-
-            if (this::googleMap.isInitialized) {
-
-                if (listOfPlaces.firstOrNull() != null) {
-
-                    Timber.d("Let's see if I am getting the twitter data atleast - ${listOfPlaces.firstOrNull()?.fullName}")
-
-                    val latLng = LatLng(
-                        listOfPlaces.firstOrNull()?.geo?.bbox?.last() ?: 0.0,
-                        listOfPlaces.firstOrNull()?.geo?.bbox?.first() ?: 0.0
-                    )
-
-
-                    googleMap.addMarker(MarkerOptions().position(latLng))
-
-                    navigateCameraToMarker(latLng)
-
-
-                }
-            }
-
-        }
-    }
-
-    private fun navigateCameraToMarker(latLng: LatLng) {
+    private fun navigateCameraToMarker(latLng: LatLng) =
         googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng), 1000, null)
-    }
 
     private fun setupViewObservers() {
         observeProgressDialog()
 
-        observeErrorToast()
+        observeErrorMessages()
 
         viewModel.liveTweets.observe(viewLifecycleOwner, { tweetData ->
-
-            Timber.d("--------------response in view $tweetData")
-
             tweetData?.let { displayMarker(it) }
         })
     }
@@ -177,7 +135,7 @@ class TweetsMapsFragment : Fragment(), OnMapReadyCallback {
         })
     }
 
-    private fun observeErrorToast() {
+    private fun observeErrorMessages() {
         viewModel.errorHandler.observe(viewLifecycleOwner, { message ->
 
             context?.showLongToast(message ?: getString(R.string.error_message))
@@ -185,5 +143,39 @@ class TweetsMapsFragment : Fragment(), OnMapReadyCallback {
         })
     }
 
+    private fun displayMarker(data: TweetData?) {
+        data?.includes?.places?.let { listOfPlaces ->
+
+            if (this::googleMap.isInitialized) {
+
+                if (listOfPlaces.firstOrNull() != null) {
+
+                    /**
+                     * Check if there's a way to do this with [GeoJsonLayer] from the Maps Utility
+                     * --> GeoJson Object doesn't return accurate feature and properties <--
+                     */
+
+                    val firstPlace = listOfPlaces.firstOrNull()?.geo?.bbox
+
+                    val latLng = LatLng(
+                        firstPlace?.last() ?: 0.0,
+                        firstPlace?.first() ?: 0.0
+                    )
+
+
+                    googleMap.addMarker(MarkerOptions().apply {
+                        val username = data.includes?.users?.firstOrNull()?.username
+                        if (!username.isNullOrBlank())
+                            title(username)
+
+                        position(latLng)
+                    })
+
+                    navigateCameraToMarker(latLng)
+                }
+            }
+
+        }
+    }
 
 }

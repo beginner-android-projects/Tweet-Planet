@@ -2,7 +2,6 @@ package com.hsmsample.tweetplanet.tweets
 
 import androidx.lifecycle.*
 import com.google.gson.Gson
-import com.hsmsample.tweetplanet.di.dispatchers.DispatcherProvider
 import com.hsmsample.tweetplanet.tweets.model.MatchingRule
 import com.hsmsample.tweetplanet.tweets.model.TweetData
 import com.hsmsample.tweetplanet.tweets.repository.TweetsRepositoryImpl
@@ -12,7 +11,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import okhttp3.ResponseBody
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -55,34 +53,12 @@ class TweetsViewModel @Inject constructor(
             .distinctUntilChanged()
             .collectLatest { keyword ->
                 Timber.d("They key has changed $keyword")
-                if (keyword.isNotEmpty())
-                    initializeFilteredStream(keyword)
+                if (keyword.isNotBlank())
+                    retrieveRules(keyword)
                 else
                     retrieveRules(null)
             }
 
-    }
-
-    private fun initializeFilteredStream(keyword: String) {
-
-        viewModelScope.launch {
-
-            retrieveRules(keyword)
-
-            /*if (initCall) {
-
-                initCall = false
-
-                addAndInitializeFetching(keyword)
-
-            } else {
-
-
-
-            }*/
-
-
-        }
     }
 
     private fun retrieveRules(keyword: String?) {
@@ -99,8 +75,7 @@ class TweetsViewModel @Inject constructor(
                 if (response.getOrDefault(emptyList()).isNotEmpty())
                     deleteAndInitializeFetching(response, keyword)
                 else
-                    if (keyword != null)
-                        addAndInitializeFetching(keyword)
+                    keyword?.let { addAndInitializeFetching(it) }
 
             } else {
                 _progressDialog.value = false
@@ -112,7 +87,15 @@ class TweetsViewModel @Inject constructor(
 
     val liveTweets = tweetsRepositoryImpl.getFilteredStream()
         .map { jsonString ->
-            gson.fromJson(jsonString, TweetData::class.java)
+            try {
+                Timber.d("------- What does this string look like - $jsonString")
+                if (!jsonString.isNullOrBlank()) {
+                    gson.fromJson(jsonString, TweetData::class.java)
+                } else TweetData()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                TweetData()
+            }
         }
         .filter { tweetData ->
             tweetData?.includes?.places?.firstOrNull()?.geo != null
@@ -165,8 +148,7 @@ class TweetsViewModel @Inject constructor(
 
                 _progressDialog.value = false
 
-                if (keyword != null)
-                    addAndInitializeFetching(keyword)
+                keyword?.let { addAndInitializeFetching(it) }
             }
 
             deleteRules.isFailure -> {

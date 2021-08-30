@@ -4,15 +4,11 @@ import com.google.gson.JsonObject
 import com.hsmsample.tweetplanet.di.dispatchers.DispatcherProvider
 import com.hsmsample.tweetplanet.tweets.TweetsRemoteDataStore
 import com.hsmsample.tweetplanet.tweets.model.MatchingRule
-import com.hsmsample.tweetplanet.tweets.model.TweetData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import okhttp3.ResponseBody
 import okio.Buffer
-import timber.log.Timber
 import java.nio.charset.Charset
 import javax.inject.Inject
 
@@ -24,28 +20,32 @@ class TweetsRepository @Inject constructor(
     override fun getFilteredStream(): Flow<String?> =
         flow {
 
-            try{
+            try {
                 val response = tweetsRemoteDataStore.getFilteredStream()
-
-                Timber.d("----------------response in repo ${response.body()}")
-                Timber.d("----------------response in repo ${response.code()}")
-                Timber.d("----------------response in repo ${response.raw()}")
-                Timber.d("----------------response in repo ${response.errorBody()}")
-                Timber.d("----------------response in repo ${response.message()}")
 
                 val source = response.body()?.source()
                 val buffer = Buffer()
 
 
-                while(source?.exhausted() != true){
+                while (source?.exhausted() != true) {
                     response.body()?.source()?.read(buffer, 8192)
                     val data = buffer.readString(Charset.defaultCharset())
 
-                    emit(data)
+                    if (data.contains("\n")) {
+
+                        val dataArray = data.split("\n")
+
+                        for (dataItem in dataArray) {
+                            emit(dataItem)
+                        }
+
+                    } else
+                        emit(data)
                 }
 
 
             } catch (e: Exception) {
+                e.printStackTrace()
                 emit(null)
             }
 
@@ -105,8 +105,4 @@ class TweetsRepository @Inject constructor(
         }
 
     }
-
-
-    override fun getRandomData(): String = "lkadjhfalkdhf ksadkljfh kfakljdhfk"
-
 }

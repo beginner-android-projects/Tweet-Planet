@@ -19,6 +19,4 @@ interface TweetsRepositoryImpl {
 
     suspend fun retrieveRules(): Result<List<MatchingRule>>
 
-    fun getRandomData(): String
-
 }
