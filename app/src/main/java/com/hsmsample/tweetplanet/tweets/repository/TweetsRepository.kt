@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import okio.Buffer
+import timber.log.Timber
 import java.nio.charset.Charset
 import javax.inject.Inject
 
@@ -36,9 +37,9 @@ class TweetsRepository @Inject constructor(
                     source?.read(buffer, 8192)
                     val data = buffer.readString(Charset.defaultCharset())
 
-                    if (data.contains("\n")) {
+                    if (data.contains('\n')) {
 
-                        val dataArray = data.split("\n")
+                        val dataArray = data.split('\n')
 
                         for (dataItem in dataArray) {
                             val convertedItem = getTweetDataFromString(dataItem)
@@ -67,6 +68,7 @@ class TweetsRepository @Inject constructor(
         try {
             gson.fromJson(jsonString, TweetData::class.java)
         } catch (e: Exception) {
+            Timber.d("-------------------------------------------------------- this is the json string when crashed ------ $jsonString")
             e.printStackTrace()
             null
         }

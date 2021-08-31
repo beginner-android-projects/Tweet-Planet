@@ -8,8 +8,12 @@ import com.hsmsample.tweetplanet.MockResponseFileReader
 import com.hsmsample.tweetplanet.di.dispatchers.StandardDispatcherTest
 import com.hsmsample.tweetplanet.tweets.TweetsRemoteDataStore
 import com.hsmsample.tweetplanet.tweets.TweetsViewModel
+import com.hsmsample.tweetplanet.tweets.repository.FAKE_ITEM_1
+import com.hsmsample.tweetplanet.tweets.repository.FakeTweetsRepositoryTest
 import com.hsmsample.tweetplanet.tweets.repository.TweetsRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -29,6 +33,7 @@ class TweetsViewModelTest {
     lateinit var tweetsViewModel: TweetsViewModel
     lateinit var tweetsRepository: TweetsRepository
     lateinit var remoteDataStore: TweetsRemoteDataStore
+    lateinit var fakeTweetsRepo: FakeTweetsRepositoryTest
 
     @get:Rule
     var mainCoroutineRule = CoroutineTestRule()
@@ -42,7 +47,7 @@ class TweetsViewModelTest {
 
     @Before
     fun init() {
-        server.start(MOCK_WEBSERVER_PORT)
+        /*server.start(MOCK_WEBSERVER_PORT)
 
         val gson = GsonConverterFactory.create(Gson())
         val retrofit = Retrofit.Builder()
@@ -50,35 +55,27 @@ class TweetsViewModelTest {
             .addConverterFactory(gson)
             .build()
 
-        remoteDataStore = TweetsRemoteDataStore(retrofit)
+        remoteDataStore = TweetsRemoteDataStore(retrofit)*/
 
-        tweetsRepository = TweetsRepository(remoteDataStore, StandardDispatcherTest(), Gson())
+        fakeTweetsRepo = FakeTweetsRepositoryTest()
 
-        tweetsViewModel = TweetsViewModel(tweetsRepository)
+        /*tweetsRepository = TweetsRepository(remoteDataStore, StandardDispatcherTest(), Gson())*/
+
+        tweetsViewModel = TweetsViewModel(fakeTweetsRepo)
     }
 
     @Test
-    fun `retrieve rules success`()  = runBlocking {
+    fun `filtered stream data emitted`()  = runBlocking {
 
-        server.apply {
-            enqueue(
-                MockResponse().setBody(MockResponseFileReader("retrieve_rules.json").content)
-            )
-        }
+        val firstItem = fakeTweetsRepo.getFilteredStream().first()
 
-        tweetsViewModel.setSearchQuery("I")
-
-
-
+        assert(firstItem?.equals(FAKE_ITEM_1) == true)
 
     }
 
-
-    @After
+    /*@After
     fun shutdown() {
         server.shutdown()
-    }
-
-
+    }*/
 
 }
