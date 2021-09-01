@@ -1,10 +1,9 @@
-package com.hsmsample.tweetplanet.tweets.repository
+package com.hsmsample.tweetplanet.tweets.data.repository
 
 import com.google.gson.JsonObject
-import com.hsmsample.tweetplanet.tweets.model.MatchingRule
-import com.hsmsample.tweetplanet.tweets.model.TweetData
+import com.hsmsample.tweetplanet.tweets.data.model.MatchingRule
+import com.hsmsample.tweetplanet.tweets.data.model.TweetData
 import kotlinx.coroutines.flow.Flow
-import okhttp3.ResponseBody
 
 /**
  * Defines the contract for [TweetsRepository]

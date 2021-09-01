@@ -1,8 +1,8 @@
 package com.hsmsample.tweetplanet.tweets
 
 import androidx.lifecycle.*
-import com.hsmsample.tweetplanet.tweets.model.MatchingRule
-import com.hsmsample.tweetplanet.tweets.repository.TweetsRepositoryImpl
+import com.hsmsample.tweetplanet.tweets.data.model.MatchingRule
+import com.hsmsample.tweetplanet.tweets.data.repository.TweetsRepositoryImpl
 import com.hsmsample.tweetplanet.utils.ERROR_MESSAGE
 import com.hsmsample.tweetplanet.utils.SEARCH_DELAY_MILLIS
 import dagger.hilt.android.lifecycle.HiltViewModel

@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.widget.addTextChangedListener
-import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -14,16 +13,13 @@ import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.gson.Gson
 import com.hsmsample.tweetplanet.R
 import com.hsmsample.tweetplanet.databinding.FragmentTweetsMapsBinding
-import com.hsmsample.tweetplanet.tweets.model.TweetData
+import com.hsmsample.tweetplanet.tweets.data.model.TweetData
 import com.hsmsample.tweetplanet.utils.showLongToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
-import timber.log.Timber
-import javax.inject.Inject
 import com.google.android.gms.maps.CameraUpdateFactory
 
 @FlowPreview

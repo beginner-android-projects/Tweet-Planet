@@ -1,4 +1,6 @@
-package com.hsmsample.tweetplanet.data.remote
+package com.hsmsample.tweetplanet.common
+
+import retrofit2.Response
 
 /**
  * Generic class for holding success response, error response and loading status
@@ -27,5 +29,22 @@ data class Result<out T>(val status: Status, val data: T?, val error: Error?, va
 
     override fun toString(): String {
         return "Result(status=$status, data=$data, error=$error, message=$message)"
+    }
+}
+
+private suspend fun <T> getResponse(
+    request: suspend () -> Response<T>,
+    defaultErrorMessage: String
+): Result<T> {
+    return try {
+        val result = request.invoke()
+        if (result.isSuccessful) {
+            return Result.success(result.body())
+        } else {
+            val errorResponse = ErrorUtils.parseError(result, null)
+            Result.error(errorResponse?.status_message ?: defaultErrorMessage, errorResponse)
+        }
+    } catch (e: Throwable) {
+        Result.error("Unknown Error", null)
     }
 }

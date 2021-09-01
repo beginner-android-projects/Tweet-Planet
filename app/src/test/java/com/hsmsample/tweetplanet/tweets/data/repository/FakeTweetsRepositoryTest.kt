@@ -1,12 +1,9 @@
-package com.hsmsample.tweetplanet.tweets.repository
+package com.hsmsample.tweetplanet.tweets.data.repository
 
 import com.google.gson.JsonObject
-import com.hsmsample.tweetplanet.tweets.model.*
+import com.hsmsample.tweetplanet.tweets.data.model.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import org.junit.Assert.*
-
-import org.junit.Test
 
 class FakeTweetsRepositoryTest : TweetsRepositoryImpl {
     override fun getFilteredStream(): Flow<TweetData?> = flow {

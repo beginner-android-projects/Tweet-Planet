@@ -1,4 +1,4 @@
-package com.hsmsample.tweetplanet.tweets.model.request
+package com.hsmsample.tweetplanet.tweets.data.model.request
 
 
 import com.google.gson.annotations.SerializedName

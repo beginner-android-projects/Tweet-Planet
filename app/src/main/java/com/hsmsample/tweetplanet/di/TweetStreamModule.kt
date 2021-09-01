@@ -2,9 +2,9 @@ package com.hsmsample.tweetplanet.di
 
 import com.google.gson.Gson
 import com.hsmsample.tweetplanet.di.dispatchers.DispatcherProvider
-import com.hsmsample.tweetplanet.tweets.TweetsRemoteDataStore
-import com.hsmsample.tweetplanet.tweets.repository.TweetsRepository
-import com.hsmsample.tweetplanet.tweets.repository.TweetsRepositoryImpl
+import com.hsmsample.tweetplanet.tweets.data.network.Client
+import com.hsmsample.tweetplanet.tweets.data.repository.TweetsRepository
+import com.hsmsample.tweetplanet.tweets.data.repository.TweetsRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,16 +18,15 @@ object TweetStreamModule {
 
     @Provides
     @ViewModelScoped
-    fun provideTweetsRemoteDataStore(retrofit: Retrofit): TweetsRemoteDataStore
-    = TweetsRemoteDataStore(retrofit)
+    fun provideClientApi(retrofit: Retrofit): Client = retrofit.create(Client::class.java)
 
     @Provides
     @ViewModelScoped
     fun provideTweetsRepository(
-        tweetsRemoteDataStore: TweetsRemoteDataStore,
+        clientApi: Client,
         dispatchers: DispatcherProvider,
         gson: Gson
     ): TweetsRepositoryImpl =
-        TweetsRepository(tweetsRemoteDataStore, dispatchers, gson) as TweetsRepositoryImpl
+        TweetsRepository(clientApi, dispatchers, gson) as TweetsRepositoryImpl
 
 }

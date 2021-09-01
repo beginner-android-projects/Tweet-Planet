@@ -1,4 +1,4 @@
-package com.hsmsample.tweetplanet.data.remote
+package com.hsmsample.tweetplanet.common
 
 data class Error(val status_code: Int = 0,
                  val status_message: String? = null)

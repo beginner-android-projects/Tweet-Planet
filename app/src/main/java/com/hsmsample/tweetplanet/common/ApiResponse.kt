@@ -1,4 +1,4 @@
-package com.hsmsample.tweetplanet.data.remote
+package com.hsmsample.tweetplanet.common
 
 import com.google.gson.annotations.SerializedName
 

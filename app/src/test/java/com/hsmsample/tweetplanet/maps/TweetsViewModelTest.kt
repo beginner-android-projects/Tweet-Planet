@@ -1,30 +1,20 @@
 package com.hsmsample.tweetplanet.maps
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import com.hsmsample.tweetplanet.CoroutineTestRule
-import com.hsmsample.tweetplanet.MockResponseFileReader
-import com.hsmsample.tweetplanet.di.dispatchers.StandardDispatcherTest
-import com.hsmsample.tweetplanet.tweets.TweetsRemoteDataStore
 import com.hsmsample.tweetplanet.tweets.TweetsViewModel
-import com.hsmsample.tweetplanet.tweets.repository.FAKE_ITEM_1
-import com.hsmsample.tweetplanet.tweets.repository.FakeTweetsRepositoryTest
-import com.hsmsample.tweetplanet.tweets.repository.TweetsRepository
+import com.hsmsample.tweetplanet.tweets.data.repository.FAKE_ITEM_1
+import com.hsmsample.tweetplanet.tweets.data.repository.FakeTweetsRepositoryTest
+import com.hsmsample.tweetplanet.tweets.data.repository.TweetsRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.runBlocking
-import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 @ExperimentalCoroutinesApi
 @RunWith(JUnit4::class)

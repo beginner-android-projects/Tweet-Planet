@@ -1,11 +1,14 @@
-package com.hsmsample.tweetplanet.tweets.repository
+package com.hsmsample.tweetplanet.tweets.data.repository
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.hsmsample.tweetplanet.di.dispatchers.DispatcherProvider
-import com.hsmsample.tweetplanet.tweets.TweetsRemoteDataStore
-import com.hsmsample.tweetplanet.tweets.model.MatchingRule
-import com.hsmsample.tweetplanet.tweets.model.TweetData
+import com.hsmsample.tweetplanet.tweets.data.model.MatchingRule
+import com.hsmsample.tweetplanet.tweets.data.model.TweetData
+import com.hsmsample.tweetplanet.tweets.data.model.request.Add
+import com.hsmsample.tweetplanet.tweets.data.model.request.AddDeleteRuleRequest
+import com.hsmsample.tweetplanet.tweets.data.model.request.Delete
+import com.hsmsample.tweetplanet.tweets.data.network.Client
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -16,7 +19,7 @@ import java.nio.charset.Charset
 import javax.inject.Inject
 
 class TweetsRepository @Inject constructor(
-    private val tweetsRemoteDataStore: TweetsRemoteDataStore,
+    private val clientApi: Client,
     private val dispatcherProvider: DispatcherProvider,
     private val gson: Gson
 ) : TweetsRepositoryImpl {
@@ -24,7 +27,7 @@ class TweetsRepository @Inject constructor(
     override fun getFilteredStream(): Flow<TweetData?> =
         flow {
 
-            val response = tweetsRemoteDataStore.getFilteredStream()
+            val response = clientApi.getFilteredStream()
 
             val body = response.body()
             try {
@@ -68,7 +71,6 @@ class TweetsRepository @Inject constructor(
         try {
             gson.fromJson(jsonString, TweetData::class.java)
         } catch (e: Exception) {
-            Timber.d("-------------------------------------------------------- this is the json string when crashed ------ $jsonString")
             e.printStackTrace()
             null
         }
@@ -77,7 +79,15 @@ class TweetsRepository @Inject constructor(
     override suspend fun addRule(keyword: String): Result<JsonObject> {
         return try {
 
-            val response = tweetsRemoteDataStore.submitRulesForStream(true, keyword)
+            val request = AddDeleteRuleRequest(
+                add = listOf(
+                    Add(
+                        value = keyword
+                    )
+                )
+            )
+
+            val response = clientApi.submitRulesForStream(request)
 
             if (response.isSuccessful && response.body() != null)
                 Result.success(response.body()!!)
@@ -95,7 +105,14 @@ class TweetsRepository @Inject constructor(
     override suspend fun deleteExistingRules(ruleId: String): Result<JsonObject> {
         return try {
 
-            val response = tweetsRemoteDataStore.submitRulesForStream(false, ruleId)
+            val request = AddDeleteRuleRequest(
+                delete =
+                Delete(
+                    ids = listOf(ruleId)
+                )
+            )
+
+            val response = clientApi.submitRulesForStream(request)
 
             if (response.isSuccessful && response.body() != null)
                 Result.success(response.body()!!)
@@ -114,7 +131,7 @@ class TweetsRepository @Inject constructor(
         return try {
 
             val response = withContext(dispatcherProvider.io) {
-                tweetsRemoteDataStore.retrieveRules()
+                clientApi.getRulesForStream()
             }
 
             if (response.isSuccessful)
