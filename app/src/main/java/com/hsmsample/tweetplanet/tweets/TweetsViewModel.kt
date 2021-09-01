@@ -58,6 +58,16 @@ class TweetsViewModel @Inject constructor(
 
     }
 
+    val liveTweets = tweetsRepositoryImpl.getFilteredStream()
+        .catch {
+            _errorHandler.value = ERROR_MESSAGE
+        }
+        .filter { tweetData ->
+            tweetData?.includes?.places?.firstOrNull()?.geo != null
+        }
+        .asLiveData()
+
+
     private fun retrieveRules(keyword: String?) {
         viewModelScope.launch {
 
@@ -81,15 +91,6 @@ class TweetsViewModel @Inject constructor(
 
         }
     }
-
-    val liveTweets = tweetsRepositoryImpl.getFilteredStream()
-        .catch {
-            _errorHandler.value = ERROR_MESSAGE
-        }
-        .filter { tweetData ->
-            tweetData?.includes?.places?.firstOrNull()?.geo != null
-        }
-        .asLiveData()
 
     private suspend fun addAndInitializeFetching(keyword: String) {
 

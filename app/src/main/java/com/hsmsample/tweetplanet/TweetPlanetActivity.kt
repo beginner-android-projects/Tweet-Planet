@@ -24,7 +24,8 @@ class TweetPlanetActivity : AppCompatActivity() {
 
     //region Setting up activity startup
     private fun setupBinding() {
-        dataBinding = DataBindingUtil.setContentView(this, R.layout.activity_tweet_planet)
+        dataBinding = ActivityTweetPlanetBinding.inflate(layoutInflater)
+        setContentView(dataBinding.root)
     }
 
     private fun setupNavigation() {

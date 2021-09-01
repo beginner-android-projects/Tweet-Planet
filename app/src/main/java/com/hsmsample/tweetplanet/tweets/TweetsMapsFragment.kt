@@ -38,9 +38,6 @@ class TweetsMapsFragment : Fragment(), OnMapReadyCallback {
 
     private val viewModel by viewModels<TweetsViewModel>()
 
-    @Inject
-    lateinit var gson: Gson
-
     //region Lifecycle methods
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,12 +45,7 @@ class TweetsMapsFragment : Fragment(), OnMapReadyCallback {
         savedInstanceState: Bundle?
     ): View {
 
-        dataBinding = DataBindingUtil.inflate(
-            inflater,
-            R.layout.fragment_tweets_maps,
-            container,
-            false
-        )
+        dataBinding = FragmentTweetsMapsBinding.inflate(layoutInflater, container, false)
 
         setupMaps(savedInstanceState)
 
